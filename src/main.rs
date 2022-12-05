@@ -1,11 +1,12 @@
-use crate::days::three::solution_easy;
-use crate::days::three::solution_hard;
+use crate::days::six::solution_easy;
+use crate::days::six::solution_hard;
 use std::fs;
 
 pub mod days;
 
 fn main() {
-    let input = fs::read_to_string("input/3").expect("File not found.");
+    const FILE_NAME: &str = "input/latest";
+    let input = fs::read_to_string(FILE_NAME).expect("File not found.");
     println!("Easy answer is: {}", solution_easy(&input));
     println!("Hard answer is: {}", solution_hard(&input));
 }

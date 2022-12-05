@@ -14,8 +14,8 @@ pub fn solution_hard(input: &str) -> i32 {
 
 pub fn line_score(line: &str) -> i32 {
     let (first, second) = line.split_at(line.len() / 2);
-    let first_set: HashSet<_> = first.chars().into_iter().collect();
-    let second_set: HashSet<_> = second.chars().into_iter().collect();
+    let first_set: HashSet<_> = first.chars().collect();
+    let second_set: HashSet<_> = second.chars().collect();
     alpha_to_priority(*first_set.intersection(&second_set).last().unwrap()).unwrap()
 }
 
