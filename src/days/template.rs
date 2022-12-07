@@ -29,7 +29,7 @@ mod test {
     use std::fs;
 
     #[test]
-    fn four() {
+    fn test() {
         let input = fs::read_to_string("input/test").expect("File not found.");
         assert_eq!(parse(&input), 0);
         assert_eq!(solution_easy(&input), 2);

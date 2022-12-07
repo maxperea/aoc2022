@@ -1,5 +1,5 @@
-use crate::days::six::solution_easy;
-use crate::days::six::solution_hard;
+use crate::days::seven::solution_easy;
+use crate::days::seven::solution_hard;
 use std::fs;
 
 pub mod days;
