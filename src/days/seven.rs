@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use Item::*;
+
 pub enum Item {
     Dir(String),
     File(i32),
@@ -12,7 +14,7 @@ fn parse(input: &str) -> Vec<Vec<&str>> {
         .collect()
 }
 
-fn dir_stack_to_str(dir_stack: &Vec<String>) -> String {
+fn stack_to_str(dir_stack: &Vec<String>) -> String {
     dir_stack
         .iter()
         .fold("".to_owned(), |acc, next| acc.to_owned() + next)
@@ -23,46 +25,36 @@ fn get_directories(data: Vec<Vec<&str>>) -> HashMap<String, Vec<Item>> {
     let mut directories: HashMap<String, Vec<Item>> = HashMap::new();
     let mut dir_stack = vec![];
     for line in data {
-        match line[0] {
-            "$" => match line[1] {
-                "ls" => {}
-                "cd" => match line[2] {
-                    ".." => {
-                        dir_stack.pop();
-                    }
-                    dir => {
-                        dir_stack.push("/".to_owned() + dir);
-                    }
-                },
-                _ => panic!("Parse error!"),
-            },
-            "dir" => {
-                if directories.contains_key(dir_stack_to_str(&dir_stack).as_str()) {
+        match line[..] {
+            ["$", "ls"] => {}
+            ["$", "cd", ".."] => {
+                dir_stack.pop();
+            }
+            ["$", "cd", dir] => dir_stack.push("/".to_owned() + dir),
+            ["dir", dir] => {
+                let path = stack_to_str(&dir_stack);
+                if directories.contains_key(&path) {
                     directories
-                        .get_mut(dir_stack_to_str(&dir_stack).as_str())
+                        .get_mut(&path)
                         .unwrap()
-                        .push(Item::Dir(dir_stack_to_str(&dir_stack) + "/" + line[1]));
+                        .push(Dir(path + "/" + dir));
                 } else {
-                    directories.insert(
-                        dir_stack_to_str(&dir_stack),
-                        vec![Item::Dir(dir_stack_to_str(&dir_stack) + "/" + line[1])],
-                    );
+                    directories.insert(path.clone(), vec![Dir(path + "/" + dir)]);
                 }
             }
-            num => {
-                if directories.contains_key(dir_stack_to_str(&dir_stack).as_str()) {
+            [size, _fname] => {
+                let path = stack_to_str(&dir_stack);
+                if directories.contains_key(&path) {
                     directories
-                        .get_mut(dir_stack_to_str(&dir_stack).as_str())
+                        .get_mut(&path)
                         .unwrap()
-                        .push(Item::File(num.parse().unwrap()));
+                        .push(File(size.parse().unwrap()));
                 } else {
-                    directories.insert(
-                        dir_stack_to_str(&dir_stack),
-                        vec![Item::File(num.parse().unwrap())],
-                    );
+                    directories.insert(path, vec![File(size.parse().unwrap())]);
                 }
             }
-        }
+            _ => {}
+        };
     }
     directories
 }
