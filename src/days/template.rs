@@ -30,9 +30,7 @@ mod test {
 
     #[test]
     fn test() {
-        let input = fs::read_to_string("input/test").expect("File not found.");
-        assert_eq!(parse(&input), 0);
-        assert_eq!(solution_easy(&input), 2);
-        assert_eq!(solution_hard(&input), 4);
+        let test_input = fs::read_to_string("input/test").expect("File not found.");
+        let input = fs::read_to_string("input/latest").expect("File not found.");
     }
 }

@@ -1,5 +1,5 @@
-use crate::days::seven::solution_easy;
-use crate::days::seven::solution_hard;
+use crate::days::eight::solution_easy;
+use crate::days::eight::solution_hard;
 use std::fs;
 use std::time::Instant;
 
