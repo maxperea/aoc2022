@@ -85,18 +85,3 @@ pub fn solution_hard(input: &str) -> String {
     }
     res
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn five() {
-        let input = fs::read_to_string("input/5").expect("File not found.");
-        let (stacks, moves) = parse(&input);
-        assert_eq!(moves[0][1], 3);
-        assert_eq!(moves[3][2], 4);
-        assert_eq!(stacks[2].back(), Some(&'L'));
-    }
-}

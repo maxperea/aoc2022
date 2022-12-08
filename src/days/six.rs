@@ -27,36 +27,3 @@ fn all_unique(word: &VecDeque<char>) -> bool {
     let wset: HashSet<&char> = word.iter().collect();
     wset.len() == word.len()
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test1() {
-        let input0 = "mjqjpqmgbljsphdztnvjfqwrcgsmlb";
-        let input1 = "bvwbjplbgvbhsrlpgdmjqwftvncz";
-        let input2 = "nppdvjthqldpwncqszvftbrmjlhg";
-        let input3 = "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg";
-        let input4 = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw";
-        assert_eq!(solution_easy(&input0), 7);
-        assert_eq!(solution_easy(&input1), 5);
-        assert_eq!(solution_easy(&input2), 6);
-        assert_eq!(solution_easy(&input3), 10);
-        assert_eq!(solution_easy(&input4), 11);
-    }
-
-    #[test]
-    fn test2() {
-        let input0 = "mjqjpqmgbljsphdztnvjfqwrcgsmlb";
-        let input1 = "bvwbjplbgvbhsrlpgdmjqwftvncz";
-        let input2 = "nppdvjthqldpwncqszvftbrmjlhg";
-        let input3 = "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg";
-        let input4 = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw";
-        assert_eq!(solution_hard(&input0), 19);
-        assert_eq!(solution_hard(&input1), 23);
-        assert_eq!(solution_hard(&input2), 23);
-        assert_eq!(solution_hard(&input3), 29);
-        assert_eq!(solution_hard(&input4), 26);
-    }
-}
