@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 pub fn solution_easy(input: &str) -> i32 {
     ropes(parse(input), 2)
 }
@@ -11,31 +9,26 @@ pub fn solution_hard(input: &str) -> i32 {
 type Position = (i32, i32);
 
 fn parse(input: &str) -> Vec<(&str, i32)> {
-    input
-        .lines()
-        .map(|line| {
-            let ls: Vec<_> = line.split_whitespace().collect();
-            (ls[0], ls[1].parse::<i32>().unwrap())
-        })
-        .collect()
+    let mut data = vec![];
+    for line in input.lines() {
+        let words: Vec<&str> = line.split(" ").collect();
+        data.push((words[0], words[1].parse().expect("Parse error!")));
+    }
+    data
 }
 
 fn step(dir: &str, (x, y): Position) -> Position {
     match dir {
-        "U" => (x, y - 1),
         "D" => (x, y + 1),
+        "U" => (x, y - 1),
         "R" => (x + 1, y),
         "L" => (x - 1, y),
-        _ => panic!(),
+        _ => panic!("Parse error!"),
     }
 }
 
-fn is_close((x1, y1): Position, (x2, y2): Position) -> bool {
-    (x1 - x2).abs() <= 1 && (y1 - y2).abs() <= 1
-}
-
 fn follow((x1, y1): Position, (x2, y2): Position) -> Position {
-    if is_close((x1, y1), (x2, y2)) {
+    if (x1 - x2).abs() <= 1 && (y1 - y2).abs() <= 1 {
         return (x1, y1);
     }
     let dx = (x2 - x1).signum();
@@ -44,7 +37,7 @@ fn follow((x1, y1): Position, (x2, y2): Position) -> Position {
 }
 
 fn ropes(steps: Vec<(&str, i32)>, size: usize) -> i32 {
-    let mut seen = HashSet::new();
+    let mut seen = std::collections::HashSet::new();
     let mut tails = vec![(0, 0); size];
     for (dir, times) in steps {
         for _ in 0..times {
