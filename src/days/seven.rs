@@ -1,8 +1,42 @@
 use std::collections::HashMap;
 
+pub fn solution_easy(input: &str) -> i32 {
+    let dirs = get_directories(parse(input));
+
+    let mut total = 0;
+
+    for dir in dirs.keys() {
+        let size = dir_size(dir, &dirs);
+        if size <= 100000 {
+            total += size;
+        }
+    }
+
+    total
+}
+
+pub fn solution_hard(input: &str) -> i32 {
+    let dirs = get_directories(parse(input));
+
+    let used_space = dir_size("//", &dirs);
+    let free_space = 70000000 - used_space;
+    let req_space = 30000000 - free_space;
+
+    let mut ans = used_space;
+
+    for dir in dirs.keys() {
+        let size = dir_size(dir, &dirs);
+        if size < ans && size >= req_space {
+            ans = size;
+        }
+    }
+
+    ans
+}
+
 use Item::*;
 
-pub enum Item {
+enum Item {
     Dir(String),
     File(i32),
 }
@@ -61,38 +95,4 @@ fn dir_size(dir: &str, dirs: &HashMap<String, Vec<Item>>) -> i32 {
     }
 
     size
-}
-
-pub fn solution_easy(input: &str) -> i32 {
-    let dirs = get_directories(parse(input));
-
-    let mut total = 0;
-
-    for dir in dirs.keys() {
-        let size = dir_size(dir, &dirs);
-        if size <= 100000 {
-            total += size;
-        }
-    }
-
-    total
-}
-
-pub fn solution_hard(input: &str) -> i32 {
-    let dirs = get_directories(parse(input));
-
-    let used_space = dir_size("//", &dirs);
-    let free_space = 70000000 - used_space;
-    let req_space = 30000000 - free_space;
-
-    let mut ans = used_space;
-
-    for dir in dirs.keys() {
-        let size = dir_size(dir, &dirs);
-        if size < ans && size >= req_space {
-            ans = size;
-        }
-    }
-
-    ans
 }

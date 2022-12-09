@@ -1,17 +1,5 @@
 use regex::Regex;
 
-pub fn parse(input: &str) -> Vec<Vec<i32>> {
-    let re = Regex::new(r"\d+").unwrap();
-    input
-        .lines()
-        .map(|line| {
-            re.captures_iter(line)
-                .map(|cap| cap[0].parse::<i32>().unwrap())
-                .collect()
-        })
-        .collect()
-}
-
 pub fn solution_easy(input: &str) -> i32 {
     let data = parse(input);
     data.iter()
@@ -38,4 +26,16 @@ pub fn solution_hard(input: &str) -> i32 {
             }
         })
         .sum()
+}
+
+fn parse(input: &str) -> Vec<Vec<i32>> {
+    let re = Regex::new(r"\d+").unwrap();
+    input
+        .lines()
+        .map(|line| {
+            re.captures_iter(line)
+                .map(|cap| cap[0].parse::<i32>().unwrap())
+                .collect()
+        })
+        .collect()
 }

@@ -8,7 +8,7 @@ pub fn solution_hard(input: &str) -> i32 {
     find_signal(input, 14).unwrap()
 }
 
-pub fn find_signal(input: &str, signal_length: usize) -> Option<i32> {
+fn find_signal(input: &str, signal_length: usize) -> Option<i32> {
     let mut word = VecDeque::new();
     for (i, c) in input.chars().enumerate() {
         word.push_back(c);

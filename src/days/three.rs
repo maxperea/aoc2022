@@ -12,14 +12,14 @@ pub fn solution_hard(input: &str) -> i32 {
         .sum()
 }
 
-pub fn line_score(line: &str) -> i32 {
+fn line_score(line: &str) -> i32 {
     let (first, second) = line.split_at(line.len() / 2);
     let first_set: HashSet<_> = first.chars().collect();
     let second_set: HashSet<_> = second.chars().collect();
     alpha_to_priority(*first_set.intersection(&second_set).last().unwrap()).unwrap()
 }
 
-pub fn badge_score(input: &str) -> i32 {
+fn badge_score(input: &str) -> i32 {
     let sets: Vec<HashSet<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let intersection = sets.iter().skip(1).fold(sets[0].clone(), |acc, hs| {
         acc.intersection(hs).cloned().collect()
@@ -27,7 +27,7 @@ pub fn badge_score(input: &str) -> i32 {
     alpha_to_priority(*intersection.iter().next().unwrap()).unwrap()
 }
 
-pub fn alpha_to_priority(alpha: char) -> Option<i32> {
+fn alpha_to_priority(alpha: char) -> Option<i32> {
     if alpha.is_uppercase() {
         return Some(26 + alpha as i32 - '@' as i32);
     } else if alpha.is_lowercase() {

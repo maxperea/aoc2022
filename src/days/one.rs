@@ -10,7 +10,7 @@ pub fn solution_hard(input: &str) -> i32 {
     calories[..3].iter().sum()
 }
 
-pub fn read_str(input: &str) -> i32 {
+fn read_str(input: &str) -> i32 {
     input
         .split("\n")
         .map(|line| line.to_string().parse::<i32>().unwrap_or(0))

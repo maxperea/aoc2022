@@ -12,13 +12,13 @@ pub fn solution_hard(input: &str) -> i32 {
         .sum()
 }
 
-pub fn chars_to_easy(line: Vec<char>) -> i32 {
+fn chars_to_easy(line: Vec<char>) -> i32 {
     let player = char_to_move(line[1]).unwrap();
     let other = char_to_move(line[0]).unwrap();
     player.score() + player.play(other).score()
 }
 
-pub fn chars_to_hard(line: Vec<char>) -> i32 {
+fn chars_to_hard(line: Vec<char>) -> i32 {
     let result = char_to_result(line[1]).unwrap();
     let other = char_to_move(line[0]).unwrap();
     let move_to_play = other.move_for_result(&result);
