@@ -1,77 +1,49 @@
 use std::collections::HashSet;
 
 pub fn solution_easy(input: &str) -> i32 {
-    let data = parse(input);
-    ropes(data, 2)
+    ropes(parse(input), 2)
 }
 
 pub fn solution_hard(input: &str) -> i32 {
-    let data = parse(input);
-    ropes(data, 10)
+    ropes(parse(input), 10)
 }
 
-use Direction::*;
 type Position = (i32, i32);
 
-#[derive(Clone, Copy)]
-enum Direction {
-    Up,
-    Down,
-    Right,
-    Left,
-}
-
-impl Direction {
-    fn from_string(s: &str) -> Self {
-        match s {
-            "R" => Right,
-            "L" => Left,
-            "U" => Up,
-            "D" => Down,
-            _ => panic!(),
-        }
-    }
-}
-
-fn parse(_input: &str) -> Vec<(Direction, i32)> {
-    _input
+fn parse(input: &str) -> Vec<(&str, i32)> {
+    input
         .lines()
         .map(|line| {
-            let ls: Vec<&str> = line.split_whitespace().collect();
-            (Direction::from_string(ls[0]), ls[1].parse::<i32>().unwrap())
+            let ls: Vec<_> = line.split_whitespace().collect();
+            (ls[0], ls[1].parse::<i32>().unwrap())
         })
         .collect()
 }
 
-fn step(dir: Direction, (x, y): Position) -> Position {
+fn step(dir: &str, (x, y): Position) -> Position {
     match dir {
-        Up => (x, y - 1),
-        Down => (x, y + 1),
-        Right => (x + 1, y),
-        Left => (x - 1, y),
+        "U" => (x, y - 1),
+        "D" => (x, y + 1),
+        "R" => (x + 1, y),
+        "L" => (x - 1, y),
+        _ => panic!(),
     }
 }
 
 fn is_close((x1, y1): Position, (x2, y2): Position) -> bool {
-    !((x1 - x2).abs() > 1 || (y1 - y2).abs() > 1)
+    (x1 - x2).abs() <= 1 && (y1 - y2).abs() <= 1
 }
 
 fn follow((x1, y1): Position, (x2, y2): Position) -> Position {
     if is_close((x1, y1), (x2, y2)) {
         return (x1, y1);
     }
-    let mut dx = x2 - x1;
-    let mut dy = y2 - y1;
-    if dx != 0 {
-        dx = dx / dx.abs();
-    }
-    if dy != 0 {
-        dy = dy / dy.abs();
-    }
+    let dx = (x2 - x1).signum();
+    let dy = (y2 - y1).signum();
     (x1 + dx, y1 + dy)
 }
 
-fn ropes(steps: Vec<(Direction, i32)>, size: usize) -> i32 {
+fn ropes(steps: Vec<(&str, i32)>, size: usize) -> i32 {
     let mut seen = HashSet::new();
     let mut tails = vec![(0, 0); size];
     for (dir, times) in steps {
