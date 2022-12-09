@@ -1,9 +1,9 @@
 pub fn solution_easy(input: &str) -> i32 {
-    ropes(parse(input), 2)
+    simulate_ropes(parse(input), 2)
 }
 
 pub fn solution_hard(input: &str) -> i32 {
-    ropes(parse(input), 10)
+    simulate_ropes(parse(input), 10)
 }
 
 type Position = (i32, i32);
@@ -28,7 +28,8 @@ fn step(dir: &str, (x, y): Position) -> Position {
 }
 
 fn follow((x1, y1): Position, (x2, y2): Position) -> Position {
-    if (x1 - x2).abs() <= 1 && (y1 - y2).abs() <= 1 {
+    let is_close = (x1 - x2).abs() <= 1 && (y1 - y2).abs() <= 1;
+    if is_close {
         return (x1, y1);
     }
     let dx = (x2 - x1).signum();
@@ -36,7 +37,7 @@ fn follow((x1, y1): Position, (x2, y2): Position) -> Position {
     (x1 + dx, y1 + dy)
 }
 
-fn ropes(steps: Vec<(&str, i32)>, size: usize) -> i32 {
+fn simulate_ropes(steps: Vec<(&str, i32)>, size: usize) -> i32 {
     let mut seen = std::collections::HashSet::new();
     let mut tails = vec![(0, 0); size];
     for (dir, times) in steps {
