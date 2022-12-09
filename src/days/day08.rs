@@ -1,5 +1,4 @@
 use crate::days::tools::*;
-use std::cmp;
 
 pub fn solution_easy(input: &str) -> i32 {
     let mut forest = parse(input);
@@ -60,7 +59,7 @@ where
     let mut tallest_tree = -1;
     for tree in line {
         tree.visible = tree.height > tallest_tree || tree.visible;
-        tallest_tree = cmp::max(tallest_tree, tree.height);
+        tallest_tree = std::cmp::max(tallest_tree, tree.height);
     }
 }
 
