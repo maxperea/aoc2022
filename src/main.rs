@@ -1,4 +1,4 @@
-use crate::days::day09::*;
+use crate::days::day10::*;
 pub mod days;
 
 fn main() {
