@@ -1,16 +1,16 @@
 pub fn solution_easy(input: &str) -> i32 {
     let data = parse(input);
-    let mut signal = 1;
+    let mut reg_x = 1;
     let mut cycle = 0;
     let mut ans = 0;
     for entry in data {
         cycle += 1;
-        ans += check_cycle(cycle, signal);
+        ans += check_cycle(cycle, reg_x);
         match entry {
             Add(x) => {
                 cycle += 1;
-                ans += check_cycle(cycle, signal);
-                signal += x;
+                ans += check_cycle(cycle, reg_x);
+                reg_x += x;
             }
             Noop => {}
         }
@@ -38,18 +38,17 @@ pub fn solution_hard(input: &str) -> i32 {
 }
 
 fn check_cycle(cycle: i32, signal: i32) -> i32 {
-    if (cycle + 20) % 40 == 0 {
-        return cycle * signal;
+    match (cycle + 20) % 40 {
+        0 => cycle * signal,
+        _ => 0,
     }
-    0
 }
 
 fn draw_screen(cycle: i32, reg_x: i32) {
     let crt_pos = cycle % 40;
-    if (crt_pos - reg_x).abs() <= 1 {
-        print!("#");
-    } else {
-        print!(".");
+    match (crt_pos - reg_x).abs() <= 1 {
+        true => print!("#"),
+        false => print!("."),
     }
     if crt_pos == 39 {
         println!();
