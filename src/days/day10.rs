@@ -46,9 +46,9 @@ fn check_cycle(cycle: i32, signal: i32) -> i32 {
 
 fn draw_screen(cycle: i32, reg_x: i32) {
     let crt_pos = cycle % 40;
-    match (crt_pos - reg_x).abs() <= 1 {
+    match crt_pos.abs_diff(reg_x) <= 1 {
         true => print!("#"),
-        false => print!("."),
+        false => print!(" "),
     }
     if crt_pos == 39 {
         println!();
