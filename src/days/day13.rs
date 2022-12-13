@@ -39,36 +39,19 @@ pub fn solution_hard(input: &str) -> i64 {
 }
 
 fn compare(first: &Packet, second: &Packet) -> Ordering {
-    compare_aux(Some(first.clone()), Some(second.clone()))
-}
+    match (first.clone(), second.clone()) {
+        (Integer(x), Integer(y)) => x.cmp(&y),
+        (Integer(x), List(y)) => compare(&List(vec![Integer(x)]), &List(y)),
+        (List(x), Integer(y)) => compare(&List(x), &List(vec![Integer(y)])),
 
-fn compare_aux(first: Option<Packet>, second: Option<Packet>) -> Ordering {
-    match (first, second) {
-        (Some(Integer(x)), Some(Integer(y))) => x.cmp(&y),
+        (List(x), List(y)) if x.is_empty() && y.is_empty() => Equal,
+        (List(x), List(_)) if x.is_empty() => Less,
+        (List(_), List(y)) if y.is_empty() => Greater,
 
-        (None, Some(_)) => Less,
-        (Some(_), None) => Greater,
-
-        (Some(Integer(x)), Some(List(y))) => {
-            compare_aux(Some(List(vec![Integer(x)])), Some(List(y)))
-        }
-
-        (Some(List(x)), Some(Integer(y))) => {
-            compare_aux(Some(List(x)), Some(List(vec![Integer(y)])))
-        }
-
-        (Some(List(x)), Some(List(y))) if x.is_empty() && y.is_empty() => Equal,
-        (Some(List(x)), Some(List(_))) if x.is_empty() => Less,
-        (Some(List(_)), Some(List(y))) if y.is_empty() => Greater,
-
-        (Some(List(mut x)), Some(List(mut y))) => {
-            match compare_aux(x.first().cloned(), y.first().cloned()) {
-                Equal => compare_aux(Some(List(x.split_off(1))), Some(List(y.split_off(1)))),
-                res => res,
-            }
-        }
-
-        (None, None) => Equal,
+        (List(mut x), List(mut y)) => match compare(x.first().unwrap(), y.first().unwrap()) {
+            Equal => compare(&List(x.split_off(1)), &List(y.split_off(1))),
+            order => order,
+        },
     }
 }
 
@@ -88,7 +71,7 @@ fn parse_list(input: &str) -> IResult<&str, Vec<Packet>> {
         tag("["),
         separated_list0(
             tag(","),
-            map(parse_integer, Packet::Integer).or(map(parse_list, Packet::List)),
+            map(parse_integer, Integer).or(map(parse_list, List)),
         ),
         tag("]"),
     )(input)
@@ -106,47 +89,4 @@ fn parse(input: &str) -> Vec<Packet> {
         }
     }
     data
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test2() {
-        let (_, less) = parse_packet("[[4,4],4,4]").unwrap();
-        let (_, greater) = parse_packet("[[4,4],4,4,4]").unwrap();
-        assert_eq!(compare(&greater, &less), Greater);
-    }
-
-    #[test]
-    fn test() {
-        assert_eq!(compare(&Integer(2), &Integer(3)), Less);
-        assert_eq!(
-            compare(
-                &List(vec![
-                    Integer(1),
-                    Integer(1),
-                    Integer(3),
-                    Integer(1),
-                    Integer(1)
-                ]),
-                &List(vec![
-                    Integer(1),
-                    Integer(1),
-                    Integer(5),
-                    Integer(1),
-                    Integer(1)
-                ])
-            ),
-            Less
-        );
-        assert_eq!(
-            compare(
-                &List(vec![Integer(9),]),
-                &List(vec![List(vec![Integer(8), Integer(7), Integer(6),]),])
-            ),
-            Greater
-        );
-    }
 }
