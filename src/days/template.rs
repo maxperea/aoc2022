@@ -1,16 +1,16 @@
-pub fn solution_easy(input: &str) -> i32 {
+pub fn solution_easy(input: &str) -> i64 {
     let data = parse(input);
-    data
+    unimplemented!()
 }
 
-pub fn solution_hard(input: &str) -> i32 {
+pub fn solution_hard(input: &str) -> i64 {
     let data = parse(input);
-    data
+    unimplemented!()
 }
 
-fn parse(_input: &str) -> i32 {
-    let _re = regex::Regex::new(r"\d+").unwrap();
-    0
+fn parse(input: &str) -> i64 {
+    let re = regex::Regex::new(r"\d+").unwrap();
+    unimplemented!()
 }
 
 #[cfg(test)]

@@ -74,16 +74,3 @@ fn parse(input: &str) -> Vec<Signal> {
     }
     data
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn test() {
-        let test_input = fs::read_to_string("input/test").expect("File not found.");
-        assert_eq!(solution_easy(&test_input), 13140);
-        assert_eq!(solution_hard(&test_input), 0);
-    }
-}

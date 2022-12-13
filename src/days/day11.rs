@@ -2,16 +2,19 @@ use std::collections::VecDeque;
 
 pub fn solution_easy(input: &str) -> i64 {
     let mut monkeys = parse(input);
+    let worry_modifier = |x: i64| -> i64 { x / 3 };
     for _ in 0..20 {
-        do_round(&mut monkeys);
+        do_round(&mut monkeys, worry_modifier);
     }
     get_monkey_business(monkeys) as i64
 }
 
 pub fn solution_hard(input: &str) -> i64 {
     let mut monkeys = parse(input);
-    for _ in 0..10000 {
-        do_round(&mut monkeys);
+    let total_divisor: i64 = monkeys.iter().map(|m| m.divisor).product();
+    let worry_modifier = |x: i64| -> i64 { x % total_divisor };
+    for _ in 0..10_000 {
+        do_round(&mut monkeys, worry_modifier);
     }
     get_monkey_business(monkeys) as i64
 }
@@ -34,8 +37,6 @@ struct Monkey {
     inspected_count: usize,
 }
 
-const TOTAL_DIVISOR: i64 = 7 * 11 * 13 * 3 * 17 * 2 * 5 * 19;
-
 fn get_monkey_business(monkeys: Vec<Monkey>) -> usize {
     let mut counts: Vec<_> = monkeys
         .iter()
@@ -45,9 +46,12 @@ fn get_monkey_business(monkeys: Vec<Monkey>) -> usize {
     counts.pop().unwrap() * counts.pop().unwrap()
 }
 
-fn do_round(monkeys: &mut Vec<Monkey>) {
+fn do_round<F>(monkeys: &mut Vec<Monkey>, worry_modifier: F)
+where
+    F: Fn(i64) -> i64,
+{
     for i in 0..monkeys.len() {
-        let thrown_items = monkeys[i].throw_items();
+        let thrown_items = monkeys[i].throw_items(&worry_modifier);
         for (index, item) in thrown_items {
             monkeys[index].receive(item);
         }
@@ -55,14 +59,13 @@ fn do_round(monkeys: &mut Vec<Monkey>) {
 }
 
 impl Monkey {
-    fn inspect(&mut self, item: &mut Item) -> MonkeyIndex {
+    fn inspect<F>(&mut self, item: &mut Item, worry_modifier: F) -> MonkeyIndex
+    where
+        F: Fn(i64) -> i64,
+    {
         self.inspected_count += 1;
         item.worry_level = (self.operation)(item.worry_level);
-        // item.worry_level = item.worry_level / 3;
-
-        while item.worry_level > TOTAL_DIVISOR {
-            item.worry_level -= TOTAL_DIVISOR;
-        }
+        item.worry_level = worry_modifier(item.worry_level);
 
         if item.worry_level % self.divisor == 0 {
             self.true_next
@@ -71,11 +74,14 @@ impl Monkey {
         }
     }
 
-    fn throw_items(&mut self) -> Vec<(MonkeyIndex, Item)> {
+    fn throw_items<F>(&mut self, worry_modifier: F) -> Vec<(MonkeyIndex, Item)>
+    where
+        F: Fn(i64) -> i64,
+    {
         let mut throws = vec![];
         while !self.items.is_empty() {
             let mut item = self.items.pop_front().unwrap();
-            let monkey_index = self.inspect(&mut item);
+            let monkey_index = self.inspect(&mut item, &worry_modifier);
             throws.push((monkey_index, item));
         }
         throws
@@ -139,18 +145,5 @@ fn parse_operation(input: &str) -> Box<dyn Fn(WorryLevel) -> WorryLevel> {
             Box::new(move |x| x * n)
         }
         _ => panic!(),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn test() {
-        let test_input = fs::read_to_string("input/test").expect("File not found.");
-        assert_eq!(solution_easy(&test_input), 10605);
-        assert_eq!(solution_hard(&test_input), 0);
     }
 }
