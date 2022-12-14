@@ -2,12 +2,6 @@ use std::cmp::Ordering;
 use Ordering::*;
 use Packet::*;
 
-#[derive(Clone, Debug)]
-enum Packet {
-    Integer(i64),
-    List(Vec<Packet>),
-}
-
 pub fn solution_easy(input: &str) -> i64 {
     let data = parse(input);
     let mut sum = 0;
@@ -28,28 +22,32 @@ pub fn solution_hard(input: &str) -> i64 {
     data.sort_by(compare);
 
     let mut product = 1;
-
     for (index, item) in data.iter().enumerate() {
         if compare(item, &divider1) == Equal || compare(item, &divider2) == Equal {
             product *= index + 1;
         }
     }
-
     product as i64
 }
 
+#[derive(Clone, Debug)]
+enum Packet {
+    Integer(i64),
+    List(Vec<Packet>),
+}
+
 fn compare(first: &Packet, second: &Packet) -> Ordering {
-    match (first.clone(), second.clone()) {
+    match (first, second) {
         (Integer(x), Integer(y)) => x.cmp(&y),
-        (Integer(x), List(y)) => compare(&List(vec![Integer(x)]), &List(y)),
-        (List(x), Integer(y)) => compare(&List(x), &List(vec![Integer(y)])),
+        (Integer(x), List(_)) => compare(&List(vec![Integer(*x)]), second),
+        (List(_), Integer(y)) => compare(first, &List(vec![Integer(*y)])),
 
         (List(x), List(y)) if x.is_empty() && y.is_empty() => Equal,
         (List(x), List(_)) if x.is_empty() => Less,
         (List(_), List(y)) if y.is_empty() => Greater,
 
-        (List(mut x), List(mut y)) => match compare(x.first().unwrap(), y.first().unwrap()) {
-            Equal => compare(&List(x.split_off(1)), &List(y.split_off(1))),
+        (List(x), List(y)) => match compare(x.first().unwrap(), y.first().unwrap()) {
+            Equal => compare(&List(x.clone().split_off(1)), &List(y.clone().split_off(1))),
             order => order,
         },
     }
@@ -60,33 +58,20 @@ use nom::{
     sequence::delimited, IResult,
 };
 
-fn parse_integer(input: &str) -> IResult<&str, i64> {
-    i64(input)
-}
-
 fn parse_list(input: &str) -> IResult<&str, Vec<Packet>> {
     use nom::Parser;
-
     delimited(
         tag("["),
-        separated_list0(
-            tag(","),
-            map(parse_integer, Integer).or(map(parse_list, List)),
-        ),
+        separated_list0(tag(","), map(i64, Integer).or(map(parse_list, List))),
         tag("]"),
     )(input)
 }
 
 fn parse_packet(input: &str) -> IResult<&str, Packet> {
-    map(parse_list, |contents| List(contents))(input)
+    map(parse_list, List)(input)
 }
 
 fn parse(input: &str) -> Vec<Packet> {
-    let mut data = vec![];
-    for line in input.lines() {
-        if let Ok((_, res)) = parse_packet(line) {
-            data.push(res);
-        }
-    }
-    data
+    let (_, right): (Vec<_>, Vec<_>) = input.lines().map(parse_packet).flatten().unzip();
+    right
 }
