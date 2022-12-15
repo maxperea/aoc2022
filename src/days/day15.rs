@@ -12,8 +12,7 @@ pub fn solution_easy(input: &str) -> i64 {
 
 pub fn solution_hard(input: &str) -> i64 {
     let sensors = parse(input);
-    let candidates = get_all_candidates(&sensors);
-    for pos in candidates {
+    for pos in sensors.iter().flat_map(get_candidates) {
         if can_have_beacon(&pos, &sensors, false) {
             return pos.x * 4_000_000 + pos.y;
         }
@@ -26,6 +25,7 @@ struct Position {
     x: i64,
     y: i64,
 }
+
 struct Sensor {
     sensor: Position,
     beacon: Position,
@@ -33,10 +33,10 @@ struct Sensor {
 
 fn get_candidates(Sensor { sensor, beacon }: &Sensor) -> Vec<Position> {
     let max = 4_000_000;
-    let mut res = vec![];
-    let dist = man_dist(sensor, beacon) + 1;
+    let dist = 1 + manhattan(sensor, beacon);
     let min_x = 0.max(sensor.x - dist);
     let max_x = max.min(sensor.x + dist);
+    let mut res = vec![];
     for x in min_x..=max_x {
         let dx = (sensor.x - x).abs();
         let dy = dist - dx;
@@ -52,20 +52,16 @@ fn get_candidates(Sensor { sensor, beacon }: &Sensor) -> Vec<Position> {
     res
 }
 
-fn get_all_candidates(sensors: &Vec<Sensor>) -> Vec<Position> {
-    sensors.iter().map(get_candidates).flatten().collect()
-}
-
-fn can_have_beacon(pos: &Position, sensors: &Vec<Sensor>, easy: bool) -> bool {
-    let f = |b, n| b && can_have_beacon_aux(pos, n, easy);
+fn can_have_beacon(pos: &Position, sensors: &[Sensor], easy: bool) -> bool {
+    let f = |b, n| b && can_have_beacon_one(pos, n, easy);
     sensors.iter().fold(true, f)
 }
 
-fn can_have_beacon_aux(pos: &Position, Sensor { sensor, beacon }: &Sensor, easy: bool) -> bool {
-    (beacon == pos && easy) || man_dist(&sensor, pos) > man_dist(&sensor, &beacon)
+fn can_have_beacon_one(pos: &Position, Sensor { sensor, beacon }: &Sensor, easy: bool) -> bool {
+    (beacon == pos && easy) || manhattan(&sensor, pos) > manhattan(&sensor, &beacon)
 }
 
-fn man_dist(fst: &Position, snd: &Position) -> i64 {
+fn manhattan(fst: &Position, snd: &Position) -> i64 {
     (fst.x - snd.x).abs() + (fst.y - snd.y).abs()
 }
 
