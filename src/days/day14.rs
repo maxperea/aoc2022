@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use std::cmp::{max, min};
 
 pub fn solution_easy(input: &str) -> i64 {
     let (max, mut cave) = get_cave(&input);
@@ -27,21 +26,21 @@ pub fn solution_hard(input: &str) -> i64 {
     count
 }
 
+type Cave = Vec<Vec<bool>>;
+type Path = Vec<Pos>;
+type Pos = (usize, usize);
+
 fn get_cave(input: &str) -> (usize, Cave) {
     let mut cave = vec![vec![false; 1000]; 300];
 
     let paths = parse(input);
     let max = y_max(&paths);
 
-    for crack in paths {
-        set_crack(&crack, &mut cave);
+    for path in paths {
+        set_path(&path, &mut cave);
     }
     (max, cave)
 }
-
-type Cave = Vec<Vec<bool>>;
-type Path = Vec<Pos>;
-type Pos = (usize, usize);
 
 fn y_max(path: &Vec<Path>) -> usize {
     path.iter().flatten().map(|(_, y)| y).max().unwrap().clone()
@@ -66,17 +65,17 @@ fn drop_sand(cave: &mut Cave, limit: usize) -> Option<Pos> {
     }
 }
 
-fn set_crack(crack: &Path, cave: &mut Cave) {
-    for (prev, next) in crack.iter().tuple_windows() {
+fn set_path(path: &Path, cave: &mut Cave) {
+    for (prev, next) in path.iter().tuple_windows() {
         if prev.0 == next.0 {
-            let iter_y = min(prev.1, next.1)..=max(prev.1, next.1);
+            let iter_y = prev.1.min(next.1)..=prev.1.max(next.1);
 
             let x = prev.0;
             for y in iter_y {
                 cave[y][x] = true;
             }
         } else {
-            let iter_x = min(prev.0, next.0)..=max(prev.0, next.0);
+            let iter_x = prev.0.min(next.0)..=prev.0.max(next.0);
 
             let y = prev.1;
             for x in iter_x {
@@ -103,17 +102,4 @@ fn parse_pair(input: &str) -> IResult<&str, Pos> {
 fn parse(input: &str) -> Vec<Path> {
     let (_, right): (Vec<_>, Vec<_>) = input.lines().map(parse_line).flatten().unzip();
     right
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn test() {
-        let test_input = fs::read_to_string("input/test").expect("File not found.");
-        assert_eq!(solution_easy(&test_input), 0);
-        assert_eq!(solution_hard(&test_input), 0);
-    }
 }
