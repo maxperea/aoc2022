@@ -13,16 +13,22 @@ fn bfs(valves: &heapless::Vec<Valve, 64>) -> u32 {
     let mut visited = HashSet::new();
     let start = State {
         pos: 0,
+        e_pos: 0,
         open_valves: 0,
         score: 0,
         steps: 0,
     };
     let mut best = 0;
+    let mut depth = 0;
     queue.push_front(start);
     while let Some(state) = queue.pop_front() {
-        if state.steps == 30 && state.score > best {
+        if state.steps == 26 && state.score > best {
             best = state.score;
             println!("New best:{}", best);
+        }
+        if state.steps > depth {
+            depth = state.steps;
+            println!("New depth:{}", depth);
         }
         for state in neighbourhood(&state, valves) {
             if visited.contains(&state) {
@@ -45,39 +51,124 @@ fn is_open(valves: u64, pos: u8) -> bool {
 
 fn neighbourhood(state: &State, valves: &heapless::Vec<Valve, 64>) -> heapless::Vec<State, 6> {
     let mut new_states = heapless::Vec::new();
-    if state.steps >= 30 {
+    if state.steps >= 26 {
         return new_states;
     }
-    if !is_open(state.open_valves, state.pos) && valves[state.pos as usize].flow_rate > 0 {
-        let new_valves = set_open(state.open_valves, state.pos);
-        let new_score =
-            state.score + (29 - state.steps as u32) * valves[state.pos as usize].flow_rate;
+    let elephant_open = !is_open(state.open_valves, state.e_pos)
+        && valves[state.e_pos as usize].flow_rate > 0
+        && state.pos != state.e_pos;
+    let me_open =
+        !is_open(state.open_valves, state.pos) && valves[state.pos as usize].flow_rate > 0;
+
+    if me_open && elephant_open {
+        let mut new_valves = set_open(state.open_valves, state.pos);
+        new_valves = set_open(new_valves, state.e_pos);
+        let mut new_score =
+            state.score + (25 - state.steps as u32) * valves[state.pos as usize].flow_rate;
+        new_score = new_score + (25 - state.steps as u32) * valves[state.e_pos as usize].flow_rate;
         let valve_open = State {
             pos: state.pos.clone(),
+            e_pos: state.e_pos.clone(),
             open_valves: new_valves,
             score: new_score,
             steps: state.steps + 1,
         };
         let _ = new_states.push(valve_open);
+    } else if me_open {
+        for valve in &valves[state.e_pos as usize].connections {
+            let new_valves = set_open(state.open_valves, state.pos);
+            let new_score =
+                state.score + (25 - state.steps as u32) * valves[state.pos as usize].flow_rate;
+            let _ = new_states.push(State {
+                pos: state.pos.clone(),
+                e_pos: valve.clone(),
+                open_valves: new_valves,
+                score: new_score,
+                steps: state.steps + 1,
+            });
+        }
+    } else if elephant_open {
+        for valve in &valves[state.pos as usize].connections {
+            let new_valves = set_open(state.open_valves, state.e_pos);
+            let new_score =
+                state.score + (25 - state.steps as u32) * valves[state.e_pos as usize].flow_rate;
+            let _ = new_states.push(State {
+                e_pos: state.e_pos.clone(),
+                pos: valve.clone(),
+                open_valves: new_valves,
+                score: new_score,
+                steps: state.steps + 1,
+            });
+        }
     }
     for valve in &valves[state.pos as usize].connections {
-        let _ = new_states.push(State {
-            pos: valve.clone(),
-            open_valves: state.open_valves.clone(),
-            score: state.score,
-            steps: state.steps + 1,
-        });
+        for e_valve in &valves[state.e_pos as usize].connections {
+            let _ = new_states.push(State {
+                pos: valve.clone(),
+                e_pos: e_valve.clone(),
+                open_valves: state.open_valves.clone(),
+                score: state.score,
+                steps: state.steps + 1,
+            });
+        }
     }
     new_states
+}
+
+fn get_map(valves: &heapless::Vec<Valve, 64>) -> Map {
+    let mut flow_rate_valves = vec![];
+    let mut valve_map = HashMap::new();
+    for (i, valve) in valves.iter().enumerate() {
+        if valve.flow_rate > 0 {
+            flow_rate_valves.push(i);
+        }
+    }
+
+    for fr_valve in flow_rate_valves {
+        let mut others = vec![];
+        for other in &valves[fr_valve].connections {
+            others.push(get_distance(fr_valve as u8, *other, valves));
+        }
+        valve_map.insert(fr_valve as u8, others);
+    }
+    valve_map
+}
+
+fn get_distance(pos: u8, other: u8, valves: &heapless::Vec<Valve, 64>) -> u8 {
+    let mut queue = VecDeque::new();
+    let mut visited = HashSet::new();
+    let start = (pos, 0);
+    queue.push_front(start);
+    while let Some((test, dist)) = queue.pop_front() {
+        if test == other {
+            return dist;
+        }
+        for next in &valves[test as usize].connections {
+            if visited.contains(&next) {
+                continue;
+            }
+            queue.push_back((*next, dist + 1));
+            visited.insert(next);
+        }
+    }
+    panic!()
 }
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 struct State {
     pos: u8,
+    e_pos: u8,
     open_valves: u64,
     score: u32,
     steps: u8,
 }
+
+struct Node {
+    distance: u8,
+    pos: u8,
+}
+
+type Map = HashMap<u8, Vec<u8>>;
 
 struct Valve {
     flow_rate: u32,
