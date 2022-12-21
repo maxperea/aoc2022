@@ -15,7 +15,7 @@ pub fn solution_hard(input: &str) -> i64 {
 
 fn bfs<F>(valves: &HVec<Valve, 64>, neighbourhood: F) -> u32
 where
-    F: Fn(&State, &HVec<Valve, 64>) -> HVec<State, 40>,
+    F: Fn(&State, &HVec<Valve, 64>) -> HVec<State, 30>,
 {
     let mut queue = VecDeque::new();
     let mut visited = HashSet::new();
@@ -46,33 +46,37 @@ fn is_open(valves: u64, pos: u8) -> bool {
     valves & (1 << pos) > 0
 }
 
-fn neighbourhood_easy(state: &State, valves: &HVec<Valve, 64>) -> HVec<State, 40> {
+fn neighbourhood_easy(state: &State, valves: &HVec<Valve, 64>) -> HVec<State, 30> {
     let mut new_states = HVec::new();
     if state.time >= 30 {
         return new_states;
     }
     if !is_open(state.open, state.me) && valves[state.me as usize].flow_rate > 0 {
-        let _ = new_states.push(State {
-            el: 0,
-            me: state.me.clone(),
-            open: set_open(state.open, state.me),
-            score: state.score + (29 - state.time as u32) * valves[state.me as usize].flow_rate,
-            time: state.time + 1,
-        });
+        new_states
+            .push(State {
+                el: 0,
+                me: state.me.clone(),
+                open: set_open(state.open, state.me),
+                score: state.score + (29 - state.time as u32) * valves[state.me as usize].flow_rate,
+                time: state.time + 1,
+            })
+            .expect("Undersized vector.");
     }
     for valve in &valves[state.me as usize].connections {
-        let _ = new_states.push(State {
-            me: valve.clone(),
-            el: 0,
-            open: state.open.clone(),
-            score: state.score,
-            time: state.time + 1,
-        });
+        new_states
+            .push(State {
+                me: valve.clone(),
+                el: 0,
+                open: state.open.clone(),
+                score: state.score,
+                time: state.time + 1,
+            })
+            .expect("Undersized vector.");
     }
     new_states
 }
 
-fn neighbourhood_hard(state: &State, valves: &HVec<Valve, 64>) -> HVec<State, 40> {
+fn neighbourhood_hard(state: &State, valves: &HVec<Valve, 64>) -> HVec<State, 30> {
     let mut new_states = HVec::new();
     if state.time >= 26 {
         return new_states;
@@ -95,49 +99,55 @@ fn neighbourhood_hard(state: &State, valves: &HVec<Valve, 64>) -> HVec<State, 40
             score: new_score,
             time: state.time + 1,
         };
-        let _ = new_states.push(valve_open);
+        new_states.push(valve_open).expect("Undersized vector.");
     } else if me_open {
         for valve in &valves[state.el as usize].connections {
             let new_valves = set_open(state.open, state.me);
             let new_score =
                 state.score + (25 - state.time as u32) * valves[state.me as usize].flow_rate;
-            let _ = new_states.push(State {
-                me: state.me.clone(),
-                el: valve.clone(),
-                open: new_valves,
-                score: new_score,
-                time: state.time + 1,
-            });
+            new_states
+                .push(State {
+                    me: state.me.clone(),
+                    el: valve.clone(),
+                    open: new_valves,
+                    score: new_score,
+                    time: state.time + 1,
+                })
+                .expect("Undersized vector.");
         }
     } else if elephant_open {
         for valve in &valves[state.me as usize].connections {
             let new_valves = set_open(state.open, state.el);
             let new_score =
                 state.score + (25 - state.time as u32) * valves[state.el as usize].flow_rate;
-            let _ = new_states.push(State {
-                el: state.el.clone(),
-                me: valve.clone(),
-                open: new_valves,
-                score: new_score,
-                time: state.time + 1,
-            });
+            new_states
+                .push(State {
+                    el: state.el.clone(),
+                    me: valve.clone(),
+                    open: new_valves,
+                    score: new_score,
+                    time: state.time + 1,
+                })
+                .expect("Undersized vector.");
         }
     }
     for valve in &valves[state.me as usize].connections {
         for e_valve in &valves[state.el as usize].connections {
-            let _ = new_states.push(State {
-                me: valve.clone(),
-                el: e_valve.clone(),
-                open: state.open.clone(),
-                score: state.score,
-                time: state.time + 1,
-            });
+            new_states
+                .push(State {
+                    me: valve.clone(),
+                    el: e_valve.clone(),
+                    open: state.open.clone(),
+                    score: state.score,
+                    time: state.time + 1,
+                })
+                .expect("Undersized vector.");
         }
     }
     new_states
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 struct State {
     me: u8,
     el: u8,
@@ -158,6 +168,7 @@ impl State {
     }
 }
 
+#[derive(Debug)]
 struct Valve {
     flow_rate: u32,
     connections: Vec<u8>,
@@ -186,13 +197,15 @@ fn parse(input: &str) -> HVec<Valve, 64> {
         for con in first_valve.connections {
             connections.push(*firstvalves.get(&con).unwrap() as u8);
         }
-        let _ = valves.insert(
-            *index as usize,
-            Valve {
-                flow_rate: first_valve.flow_rate,
-                connections,
-            },
-        );
+        valves
+            .insert(
+                *index as usize,
+                Valve {
+                    flow_rate: first_valve.flow_rate,
+                    connections,
+                },
+            )
+            .expect("Undersized vector.");
     }
 
     valves
