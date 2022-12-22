@@ -1,6 +1,8 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
+use BlockType::*;
+use Direction::*;
 
-pub fn solution_easy(input: &str) -> i64 {
+pub fn solution_easy(input: &str) -> u64 {
     let winds = parse(input);
     let mut winds_iter = winds.iter().cycle();
     let blocks = get_blocks();
@@ -20,7 +22,7 @@ pub fn solution_easy(input: &str) -> i64 {
     floor.height
 }
 
-pub fn solution_hard(input: &str) -> i64 {
+pub fn solution_hard(input: &str) -> u64 {
     let winds = parse(input);
     let mut winds_iter = winds.iter().cycle();
     let blocks = get_blocks();
@@ -32,6 +34,7 @@ pub fn solution_hard(input: &str) -> i64 {
     let mut previous;
     let mut current = 0;
     let mut diff = 0;
+    let mut seen = HashSet::new();
     for p in 1..3 {
         while count < period * p {
             position(
@@ -40,6 +43,12 @@ pub fn solution_hard(input: &str) -> i64 {
                 &mut floor,
             );
             count += 1;
+            if seen.contains(&floor.pieces) {
+                println!("WHAT: {count}");
+                return floor.height;
+            } else {
+                seen.insert(floor.pieces.clone());
+            }
         }
 
         previous = current;
@@ -65,37 +74,47 @@ pub fn solution_hard(input: &str) -> i64 {
 }
 
 fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
-    let mut res = vec![];
-    for &Position { x, y } in block.iter() {
-        let pos = match dir {
-            Direction::Left => Position { x: x - 1, y },
-            Direction::Right => Position { x: x + 1, y },
-            Direction::Down => Position { x, y: y - 1 },
-        };
-        if collision(&pos, floor) {
+    let mut new = block.clone();
+    match dir {
+        Left => {
+            if block[0] != 0 {
+                return None;
+            }
+            new.pop_front();
+            new.push_back(0);
+        }
+        Right => {
+            if block[6] != 0 {
+                return None;
+            }
+            new.pop_back();
+            new.push_front(0);
+        }
+        Down => {
+            for i in 0..7 {
+                new[i] <<= 1;
+            }
+        }
+    };
+    for i in 0..7 {
+        if (new[i] & floor.pieces[i]) > 0 {
             return None;
-        } else {
-            res.push(pos);
         }
     }
-    Some(res)
-}
-
-fn collision(&Position { x, y }: &Position, floor: &Floor) -> bool {
-    x < 0 || x >= 7 || floor.pieces[x as usize].contains(&y)
+    Some(new)
 }
 
 fn position<'a, I>(dir: &mut I, block_type: &BlockType, floor: &mut Floor)
 where
     I: Iterator<Item = &'a Direction>,
 {
-    let mut block = get_block(block_type, floor.height);
+    let mut block = get_block(block_type);
     loop {
         let next_dir = dir.next();
         if let Some(b) = move_block(&block, next_dir.as_ref().unwrap(), floor) {
             block = b;
         }
-        if let Some(b) = move_block(&block, &Direction::Down, floor) {
+        if let Some(b) = move_block(&block, &Down, floor) {
             block = b;
         } else {
             update_floor(floor, &block);
@@ -105,63 +124,32 @@ where
 }
 
 fn update_floor(floor: &mut Floor, block: &Block) {
-    for &Position { x, y } in block {
-        floor.pieces[x as usize].insert(y);
-        if y > floor.height {
-            floor.height = y;
+    for i in 0..7 {
+        floor.pieces[i] |= block[i];
+    }
+    let space = floor.pieces.iter().map(|x| x.trailing_zeros()).min();
+    let space_diff = 7 - space.unwrap();
+
+    if space_diff > 0 {
+        floor.height += space_diff as u64;
+        for i in 0..7 {
+            floor.pieces[i] <<= space_diff;
         }
     }
 }
 
 fn get_blocks() -> Vec<BlockType> {
-    let mut blocks = vec![];
-    blocks.push(BlockType::Horizontal);
-    blocks.push(BlockType::Cross);
-    blocks.push(BlockType::LShape);
-    blocks.push(BlockType::Vertical);
-    blocks.push(BlockType::Square);
-    blocks
+    vec![Horizontal, Cross, LShape, Vertical, Square]
 }
 
-fn get_block(btype: &BlockType, height: i64) -> Block {
-    let mut res = vec![];
-    let y = height + 4;
-    let x = 2;
-    match *btype {
-        BlockType::Horizontal => {
-            res.push(Position { x, y });
-            res.push(Position { x: x + 1, y });
-            res.push(Position { x: x + 2, y });
-            res.push(Position { x: x + 3, y });
-        }
-        BlockType::Cross => {
-            res.push(Position { x: x + 1, y });
-            res.push(Position { x: x + 1, y: y + 1 });
-            res.push(Position { x: x + 2, y: y + 1 });
-            res.push(Position { x, y: y + 1 });
-            res.push(Position { x: x + 1, y: y + 2 });
-        }
-        BlockType::LShape => {
-            res.push(Position { x, y });
-            res.push(Position { x: x + 1, y });
-            res.push(Position { x: x + 2, y });
-            res.push(Position { x: x + 2, y: y + 1 });
-            res.push(Position { x: x + 2, y: y + 2 });
-        }
-        BlockType::Vertical => {
-            res.push(Position { x, y });
-            res.push(Position { x, y: y + 1 });
-            res.push(Position { x, y: y + 2 });
-            res.push(Position { x, y: y + 3 });
-        }
-        BlockType::Square => {
-            res.push(Position { x, y });
-            res.push(Position { x: x + 1, y: y + 1 });
-            res.push(Position { x: x + 1, y });
-            res.push(Position { x, y: y + 1 });
-        }
+fn get_block(block_type: &BlockType) -> Block {
+    match block_type {
+        Horizontal => VecDeque::from([0, 0, 0b1000, 0b1000, 0b1000, 0b1000, 0]),
+        Cross => VecDeque::from([0, 0, 0b0100, 0b1110, 0b0100, 0, 0]),
+        LShape => VecDeque::from([0, 0, 0b1000, 0b1000, 0b1110, 0, 0]),
+        Vertical => VecDeque::from([0, 0, 0b1111, 0, 0, 0, 0]),
+        Square => VecDeque::from([0, 0, 0b1100, 0b1100, 0, 0, 0]),
     }
-    res
 }
 
 #[derive(Debug)]
@@ -180,27 +168,20 @@ enum BlockType {
     Square,
 }
 
-#[derive(Debug)]
-struct Position {
-    x: i8,
-    y: i64,
-}
+type Block = VecDeque<u64>;
 
-type Block = Vec<Position>;
+#[derive(Hash, PartialEq, Eq, Copy, Clone)]
 struct Floor {
-    pieces: Vec<HashSet<i64>>,
-    height: i64,
+    pieces: [u64; 7],
+    height: u64,
 }
 
 impl Floor {
     fn new() -> Self {
-        let mut pieces = vec![];
-        for elem in [0, 0, 0, 0, 0, 0, 0] {
-            let mut s = HashSet::new();
-            s.insert(elem);
-            pieces.push(s);
+        Floor {
+            pieces: [128, 128, 128, 128, 128, 128, 128],
+            height: 0,
         }
-        Floor { pieces, height: 0 }
     }
 }
 
