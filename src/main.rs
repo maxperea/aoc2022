@@ -2,8 +2,8 @@ use crate::days::day17::*;
 pub mod days;
 
 fn main() {
+    // const FILE_NAME: &str = "input/latest";
     const FILE_NAME: &str = "input/latest";
-    // const FILE_NAME: &str = "input/test";
     let input = std::fs::read_to_string(FILE_NAME).expect("File not found.");
 
     let now = std::time::Instant::now();

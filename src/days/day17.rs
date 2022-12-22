@@ -1,10 +1,24 @@
+use std::collections::HashSet;
+
 pub fn solution_easy(input: &str) -> i64 {
     let winds = parse(input);
     let mut winds_iter = winds.iter().cycle();
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
-    let mut floor = [0, 0, 0, 0, 0, 0, 0];
-    let mut count = 0;
+    let mut floor = Floor {
+        pieces: HashSet::new(),
+        height: 0,
+    };
+
+    floor.pieces.insert((0, 0));
+    floor.pieces.insert((1, 0));
+    floor.pieces.insert((2, 0));
+    floor.pieces.insert((3, 0));
+    floor.pieces.insert((4, 0));
+    floor.pieces.insert((5, 0));
+    floor.pieces.insert((6, 0));
+    let mut count: i64 = 1;
+    println!("{}", winds.len());
     while count <= 2022 {
         position(
             &mut winds_iter,
@@ -14,20 +28,208 @@ pub fn solution_easy(input: &str) -> i64 {
         count += 1;
     }
 
-    *floor.iter().max().unwrap() as i64
+    floor.height
 }
 
 pub fn solution_hard(input: &str) -> i64 {
-    let data = parse(input);
-    unimplemented!()
+    let winds = parse(input);
+    let mut winds_iter = winds.iter().cycle();
+    let blocks = get_blocks();
+    let mut blocks_iter = blocks.iter().cycle();
+    let mut floor = Floor {
+        pieces: HashSet::new(),
+        height: 0,
+    };
+
+    floor.pieces.insert((0, 0));
+    floor.pieces.insert((1, 0));
+    floor.pieces.insert((2, 0));
+    floor.pieces.insert((3, 0));
+    floor.pieces.insert((4, 0));
+    floor.pieces.insert((5, 0));
+    floor.pieces.insert((6, 0));
+
+    let mut count: i64 = 0;
+    let period = winds.len() as i64 * 5 * 348;
+
+    let mut previous;
+    let mut current = 0;
+    // let mut seen = HashSet::new();
+    // let mut previous_diff;
+    // let mut current_diff = 0;
+    for p in 1..1000 {
+        while count < period * p {
+            position(
+                &mut winds_iter,
+                *blocks_iter.next().as_ref().unwrap(),
+                &mut floor,
+            );
+            count += 1;
+        }
+
+        previous = current;
+        current = floor.height;
+        // previous_diff = current_diff;
+        let current_diff = current - previous;
+        println!("{current_diff}");
+        // println!("Diff seq: {}, {}", previous_diff, current_diff);
+
+        // if seen.contains(&(previous_diff, current_diff)) {
+        //     println!("Seen before! p={}", p);
+        // }
+        // seen.insert((previous_diff, current_diff));
+    }
+
+    // let mut result = second_period_res;
+    // while count < 1_000_000_000_000 {
+    //     count += period;
+    //     result += period_increase;
+    // }
+    // count -= period;
+
+    // while count < 1_000_000_000_000 {
+    //     position(
+    //         &mut winds_iter,
+    //         *blocks_iter.next().as_ref().unwrap(),
+    //         &mut floor,
+    //     );
+
+    //     count += 1;
+    // }
+
+    // let last_part_increase =
+    //     *floor.iter().map(|(_, y)| y).max().unwrap() as i64 - second_period_res;
+
+    // result + last_part_increase
+    0
 }
 
-fn position<'a, I>(dir: &mut I, block: &Block, floor: &mut Floor)
+fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
+    let mut res = vec![];
+    for &Position { x, y } in block.iter() {
+        let pos = match dir {
+            Direction::Left => Position { x: x - 1, y },
+            Direction::Right => Position { x: x + 1, y },
+            Direction::Down => Position { x, y: y - 1 },
+        };
+        if collision(&pos, floor) {
+            return None;
+        } else {
+            res.push(pos);
+        }
+    }
+    Some(res)
+}
+
+fn collision(&Position { x, y }: &Position, floor: &Floor) -> bool {
+    x < 0 || x >= 7 || floor.pieces.contains(&(x, y))
+}
+
+fn position<'a, I>(dir: &mut I, block_type: &BlockType, floor: &mut Floor)
 where
     I: Iterator<Item = &'a Direction>,
 {
-    println!("{:?}", dir.next().as_ref().unwrap());
-    print_block(block);
+    let mut block = get_block(block_type, floor.height);
+    loop {
+        let next_dir = dir.next();
+        if let Some(b) = move_block(&block, next_dir.as_ref().unwrap(), floor) {
+            block = b;
+        }
+        if let Some(b) = move_block(&block, &Direction::Down, floor) {
+            block = b;
+        } else {
+            update_floor(floor, &block);
+            return;
+        }
+    }
+}
+
+fn update_floor(floor: &mut Floor, block: &Block) {
+    for &Position { x, y } in block {
+        floor.pieces.insert((x, y));
+        if y > floor.height {
+            floor.height = y;
+        }
+    }
+}
+
+fn get_blocks() -> Vec<BlockType> {
+    let mut blocks = vec![];
+    blocks.push(BlockType::Horizontal);
+    blocks.push(BlockType::Cross);
+    blocks.push(BlockType::LShape);
+    blocks.push(BlockType::Vertical);
+    blocks.push(BlockType::Square);
+    blocks
+}
+
+fn get_block(btype: &BlockType, height: i64) -> Block {
+    let mut res = vec![];
+    let y = height + 4;
+    let x = 2;
+    match *btype {
+        BlockType::Horizontal => {
+            res.push(Position { x, y });
+            res.push(Position { x: x + 1, y });
+            res.push(Position { x: x + 2, y });
+            res.push(Position { x: x + 3, y });
+        }
+        BlockType::Cross => {
+            res.push(Position { x: x + 1, y });
+            res.push(Position { x: x + 1, y: y + 1 });
+            res.push(Position { x: x + 2, y: y + 1 });
+            res.push(Position { x, y: y + 1 });
+            res.push(Position { x: x + 1, y: y + 2 });
+        }
+        BlockType::LShape => {
+            res.push(Position { x, y });
+            res.push(Position { x: x + 1, y });
+            res.push(Position { x: x + 2, y });
+            res.push(Position { x: x + 2, y: y + 1 });
+            res.push(Position { x: x + 2, y: y + 2 });
+        }
+        BlockType::Vertical => {
+            res.push(Position { x, y });
+            res.push(Position { x, y: y + 1 });
+            res.push(Position { x, y: y + 2 });
+            res.push(Position { x, y: y + 3 });
+        }
+        BlockType::Square => {
+            res.push(Position { x, y });
+            res.push(Position { x: x + 1, y: y + 1 });
+            res.push(Position { x: x + 1, y });
+            res.push(Position { x, y: y + 1 });
+        }
+    }
+    res
+}
+
+#[derive(Debug)]
+enum Direction {
+    Left,
+    Right,
+    Down,
+}
+
+#[derive(Debug)]
+enum BlockType {
+    Horizontal,
+    Cross,
+    LShape,
+    Vertical,
+    Square,
+}
+
+#[derive(Debug)]
+struct Position {
+    x: i8,
+    y: i64,
+}
+
+type Block = Vec<Position>;
+struct Floor {
+    pieces: HashSet<(i8, i64)>,
+    height: i64,
 }
 
 fn parse(input: &str) -> Vec<Direction> {
@@ -44,62 +246,22 @@ fn parse(input: &str) -> Vec<Direction> {
     res
 }
 
-#[derive(Debug)]
-enum Direction {
-    Left,
-    Right,
-}
-
-type Block = [[bool; 4]; 4];
-type Floor = [u64; 7];
-
-fn print_block(block: &Block) {
-    for row in block {
-        for b in row {
-            if *b {
-                print!("#");
-            } else {
-                print!(" ");
-            }
-        }
-        println!();
-    }
-}
-
-fn get_blocks() -> Vec<Block> {
-    let mut res = vec![];
-    res.push([
-        [false, false, false, false],
-        [false, false, false, false],
-        [false, false, false, false],
-        [true, true, true, true],
-    ]);
-    res.push([
-        [false, false, false, false],
-        [false, true, false, false],
-        [true, true, true, false],
-        [false, true, false, false],
-    ]);
-    res.push([
-        [false, false, false, false],
-        [false, false, true, false],
-        [false, false, true, false],
-        [true, true, true, false],
-    ]);
-    res.push([
-        [true, false, false, false],
-        [true, false, false, false],
-        [true, false, false, false],
-        [true, false, false, false],
-    ]);
-    res.push([
-        [false, false, false, false],
-        [false, false, false, false],
-        [true, true, false, false],
-        [true, true, false, false],
-    ]);
-    res
-}
+// fn print_floor(floor: &Floor) {
+//     let top = floor.iter().max().unwrap();
+//     let bottom = floor.iter().min().unwrap();
+//     for y in 0..(top - bottom) {
+//         for x in 0..7 {
+//             if floor[x] >= (top - y) {
+//                 print!("#");
+//             } else {
+//                 print!(".");
+//             }
+//         }
+//         println!();
+//     }
+//     println!();
+//     println!();
+// }
 
 #[cfg(test)]
 mod test {
