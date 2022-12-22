@@ -50,14 +50,14 @@ pub fn solution_hard(input: &str) -> i64 {
     floor.pieces.insert((6, 0));
 
     let mut count: i64 = 0;
-    let period = winds.len() as i64 * 5 * 348;
+    let period = winds.len() as i64 * 5 * 347;
+    // let period = winds.len() as i64 * 5 * 7;
 
     let mut previous;
     let mut current = 0;
-    // let mut seen = HashSet::new();
-    // let mut previous_diff;
-    // let mut current_diff = 0;
-    for p in 1..1000 {
+
+    let mut diff = 0;
+    for p in 1..3 {
         while count < period * p {
             position(
                 &mut winds_iter,
@@ -69,39 +69,25 @@ pub fn solution_hard(input: &str) -> i64 {
 
         previous = current;
         current = floor.height;
-        // previous_diff = current_diff;
-        let current_diff = current - previous;
-        println!("{current_diff}");
-        // println!("Diff seq: {}, {}", previous_diff, current_diff);
-
-        // if seen.contains(&(previous_diff, current_diff)) {
-        //     println!("Seen before! p={}", p);
-        // }
-        // seen.insert((previous_diff, current_diff));
+        diff = current - previous;
     }
+    let mut result = floor.height;
+    while count < 1_000_000_000_000 {
+        count += period;
+        result += diff;
+    }
+    count -= period;
+    result -= diff;
 
-    // let mut result = second_period_res;
-    // while count < 1_000_000_000_000 {
-    //     count += period;
-    //     result += period_increase;
-    // }
-    // count -= period;
-
-    // while count < 1_000_000_000_000 {
-    //     position(
-    //         &mut winds_iter,
-    //         *blocks_iter.next().as_ref().unwrap(),
-    //         &mut floor,
-    //     );
-
-    //     count += 1;
-    // }
-
-    // let last_part_increase =
-    //     *floor.iter().map(|(_, y)| y).max().unwrap() as i64 - second_period_res;
-
-    // result + last_part_increase
-    0
+    while count < 1_000_000_000_000 {
+        position(
+            &mut winds_iter,
+            *blocks_iter.next().as_ref().unwrap(),
+            &mut floor,
+        );
+        count += 1;
+    }
+    result + (floor.height - current)
 }
 
 fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
@@ -245,23 +231,6 @@ fn parse(input: &str) -> Vec<Direction> {
     }
     res
 }
-
-// fn print_floor(floor: &Floor) {
-//     let top = floor.iter().max().unwrap();
-//     let bottom = floor.iter().min().unwrap();
-//     for y in 0..(top - bottom) {
-//         for x in 0..7 {
-//             if floor[x] >= (top - y) {
-//                 print!("#");
-//             } else {
-//                 print!(".");
-//             }
-//         }
-//         println!();
-//     }
-//     println!();
-//     println!();
-// }
 
 #[cfg(test)]
 mod test {
