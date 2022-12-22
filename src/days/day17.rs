@@ -5,21 +5,10 @@ pub fn solution_easy(input: &str) -> i64 {
     let mut winds_iter = winds.iter().cycle();
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
-    let mut floor = Floor {
-        pieces: HashSet::new(),
-        height: 0,
-    };
-
-    floor.pieces.insert((0, 0));
-    floor.pieces.insert((1, 0));
-    floor.pieces.insert((2, 0));
-    floor.pieces.insert((3, 0));
-    floor.pieces.insert((4, 0));
-    floor.pieces.insert((5, 0));
-    floor.pieces.insert((6, 0));
-    let mut count: i64 = 1;
+    let mut floor = Floor::new();
+    let mut count: i64 = 0;
     println!("{}", winds.len());
-    while count <= 2022 {
+    while count < 2022 {
         position(
             &mut winds_iter,
             *blocks_iter.next().as_ref().unwrap(),
@@ -36,26 +25,12 @@ pub fn solution_hard(input: &str) -> i64 {
     let mut winds_iter = winds.iter().cycle();
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
-    let mut floor = Floor {
-        pieces: HashSet::new(),
-        height: 0,
-    };
-
-    floor.pieces.insert((0, 0));
-    floor.pieces.insert((1, 0));
-    floor.pieces.insert((2, 0));
-    floor.pieces.insert((3, 0));
-    floor.pieces.insert((4, 0));
-    floor.pieces.insert((5, 0));
-    floor.pieces.insert((6, 0));
-
+    let mut floor = Floor::new();
     let mut count: i64 = 0;
-    let period = winds.len() as i64 * 5 * 347;
-    // let period = winds.len() as i64 * 5 * 7;
 
+    let period = winds.len() as i64 * 5 * 347; // Period found manually
     let mut previous;
     let mut current = 0;
-
     let mut diff = 0;
     for p in 1..3 {
         while count < period * p {
@@ -71,13 +46,12 @@ pub fn solution_hard(input: &str) -> i64 {
         current = floor.height;
         diff = current - previous;
     }
+
     let mut result = floor.height;
-    while count < 1_000_000_000_000 {
+    while count + period < 1_000_000_000_000 {
         count += period;
         result += diff;
     }
-    count -= period;
-    result -= diff;
 
     while count < 1_000_000_000_000 {
         position(
@@ -108,7 +82,7 @@ fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
 }
 
 fn collision(&Position { x, y }: &Position, floor: &Floor) -> bool {
-    x < 0 || x >= 7 || floor.pieces.contains(&(x, y))
+    x < 0 || x >= 7 || floor.pieces[x as usize].contains(&y)
 }
 
 fn position<'a, I>(dir: &mut I, block_type: &BlockType, floor: &mut Floor)
@@ -132,7 +106,7 @@ where
 
 fn update_floor(floor: &mut Floor, block: &Block) {
     for &Position { x, y } in block {
-        floor.pieces.insert((x, y));
+        floor.pieces[x as usize].insert(y);
         if y > floor.height {
             floor.height = y;
         }
@@ -214,8 +188,20 @@ struct Position {
 
 type Block = Vec<Position>;
 struct Floor {
-    pieces: HashSet<(i8, i64)>,
+    pieces: Vec<HashSet<i64>>,
     height: i64,
+}
+
+impl Floor {
+    fn new() -> Self {
+        let mut pieces = vec![];
+        for elem in [0, 0, 0, 0, 0, 0, 0] {
+            let mut s = HashSet::new();
+            s.insert(elem);
+            pieces.push(s);
+        }
+        Floor { pieces, height: 0 }
+    }
 }
 
 fn parse(input: &str) -> Vec<Direction> {
@@ -225,22 +211,7 @@ fn parse(input: &str) -> Vec<Direction> {
             res.push(Direction::Left);
         } else if c == '>' {
             res.push(Direction::Right);
-        } else {
-            println!("-{}-", c);
         }
     }
     res
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::fs;
-
-    #[test]
-    fn test() {
-        let test_input = fs::read_to_string("input/test").expect("File not found.");
-        assert_eq!(solution_easy(&test_input), 0);
-        assert_eq!(solution_hard(&test_input), 0);
-    }
 }
