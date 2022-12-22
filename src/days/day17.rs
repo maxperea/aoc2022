@@ -1,21 +1,16 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use BlockType::*;
 use Direction::*;
 
 pub fn solution_easy(input: &str) -> u64 {
     let winds = parse(input);
-    let mut winds_iter = winds.iter().cycle();
+    let mut winds_iter = winds.iter().cycle().enumerate();
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
     let mut floor = Floor::new();
-    let mut count: i64 = 0;
-    println!("{}", winds.len());
+    let mut count = 0;
     while count < 2022 {
-        position(
-            &mut winds_iter,
-            *blocks_iter.next().as_ref().unwrap(),
-            &mut floor,
-        );
+        drop_block(&mut winds_iter, blocks_iter.next().unwrap(), &mut floor);
         count += 1;
     }
 
@@ -23,54 +18,41 @@ pub fn solution_easy(input: &str) -> u64 {
 }
 
 pub fn solution_hard(input: &str) -> u64 {
-    let winds = parse(input);
-    let mut winds_iter = winds.iter().cycle();
+    let jets = parse(input);
+    let mut jets_iter = jets.iter().cycle().enumerate();
+
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
+
     let mut floor = Floor::new();
-    let mut count: i64 = 0;
 
-    let period = winds.len() as i64 * 5 * 347; // Period found manually
-    let mut previous;
-    let mut current = 0;
-    let mut diff = 0;
-    let mut seen = HashSet::new();
-    for p in 1..3 {
-        while count < period * p {
-            position(
-                &mut winds_iter,
-                *blocks_iter.next().as_ref().unwrap(),
-                &mut floor,
-            );
-            count += 1;
-            if seen.contains(&floor.pieces) {
-                println!("WHAT: {count}");
-                return floor.height;
-            } else {
-                seen.insert(floor.pieces.clone());
-            }
-        }
+    let mut seen = HashMap::new();
+    let mut count = 0;
 
-        previous = current;
-        current = floor.height;
-        diff = current - previous;
-    }
-
-    let mut result = floor.height;
-    while count + period < 1_000_000_000_000 {
-        count += period;
-        result += diff;
-    }
-
-    while count < 1_000_000_000_000 {
-        position(
-            &mut winds_iter,
-            *blocks_iter.next().as_ref().unwrap(),
-            &mut floor,
-        );
+    let (start, start_height) = loop {
         count += 1;
+        let jet =
+            drop_block(&mut jets_iter, blocks_iter.next().unwrap(), &mut floor) % jets.len() as u32;
+        if seen.contains_key(&(jet, floor.pieces)) {
+            break seen.get(&(jet, floor.pieces)).unwrap();
+        } else {
+            seen.insert((jet, floor.pieces.clone()), (count, floor.height));
+        }
+    };
+
+    let period = count - start;
+    let period_height = floor.height - start_height;
+
+    let remaining = 1_000_000_000_000 - count;
+    let result = (remaining / period) * period_height + floor.height;
+    let last_few = remaining % period;
+
+    let before = floor.height;
+    for _ in 0..last_few {
+        drop_block(&mut jets_iter, blocks_iter.next().unwrap(), &mut floor);
     }
-    result + (floor.height - current)
+
+    result + (floor.height - before)
 }
 
 fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
@@ -104,21 +86,22 @@ fn move_block(block: &Block, dir: &Direction, floor: &Floor) -> Option<Block> {
     Some(new)
 }
 
-fn position<'a, I>(dir: &mut I, block_type: &BlockType, floor: &mut Floor)
+fn drop_block<'a, I>(dir: &mut I, block_type: &BlockType, floor: &mut Floor) -> u32
 where
-    I: Iterator<Item = &'a Direction>,
+    I: Iterator<Item = (usize, &'a Direction)>,
 {
     let mut block = get_block(block_type);
     loop {
-        let next_dir = dir.next();
-        if let Some(b) = move_block(&block, next_dir.as_ref().unwrap(), floor) {
+        let next = dir.next();
+        let (i, next_dir) = next.unwrap();
+        if let Some(b) = move_block(&block, next_dir, floor) {
             block = b;
         }
         if let Some(b) = move_block(&block, &Down, floor) {
             block = b;
         } else {
             update_floor(floor, &block);
-            return;
+            return i as u32;
         }
     }
 }
