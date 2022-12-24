@@ -132,6 +132,14 @@ struct State {
     time_spent: u8,
 }
 
+struct Blueprint {
+    index: u32,
+    ore_robot_price: Ore,
+    clay_robot_price: Ore,
+    obsidian_robot_price: (Ore, Clay),
+    geode_robot_price: (Ore, Obsidian),
+}
+
 #[derive(Debug, Hash, AddAssign, SubAssign, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Ore(u8);
 #[derive(Debug, Hash, AddAssign, SubAssign, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -140,14 +148,6 @@ struct Clay(u8);
 struct Obsidian(u8);
 #[derive(Debug, Hash, AddAssign, SubAssign, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Geode(u8);
-
-struct Blueprint {
-    index: u32,
-    ore_robot_price: Ore,
-    clay_robot_price: Ore,
-    obsidian_robot_price: (Ore, Clay),
-    geode_robot_price: (Ore, Obsidian),
-}
 
 impl Blueprint {
     fn get_max_ore(&self) -> Ore {
