@@ -3,14 +3,14 @@ use BlockType::*;
 use Direction::*;
 
 pub fn solution_easy(input: &str) -> u64 {
-    let winds = parse(input);
-    let mut winds_iter = winds.iter().cycle().enumerate();
+    let jets = parse(input);
+    let mut jets_iter = jets.iter().cycle().enumerate();
     let blocks = get_blocks();
     let mut blocks_iter = blocks.iter().cycle();
     let mut floor = Floor::new();
     let mut count = 0;
     while count < 2022 {
-        drop_block(&mut winds_iter, blocks_iter.next().unwrap(), &mut floor);
+        drop_block(&mut jets_iter, blocks_iter.next().unwrap(), &mut floor);
         count += 1;
     }
 
@@ -31,12 +31,13 @@ pub fn solution_hard(input: &str) -> u64 {
 
     let (start, start_height) = loop {
         count += 1;
-        let jet =
-            drop_block(&mut jets_iter, blocks_iter.next().unwrap(), &mut floor) % jets.len() as u32;
-        if seen.contains_key(&(jet, floor.pieces)) {
-            break seen.get(&(jet, floor.pieces)).unwrap();
+        let jet_index_large = drop_block(&mut jets_iter, blocks_iter.next().unwrap(), &mut floor);
+        let jet_index = jet_index_large % jets.len() as u32;
+
+        if seen.contains_key(&(jet_index, floor.pieces)) {
+            break seen.get(&(jet_index, floor.pieces)).unwrap();
         } else {
-            seen.insert((jet, floor.pieces.clone()), (count, floor.height));
+            seen.insert((jet_index, floor.pieces.clone()), (count, floor.height));
         }
     };
 

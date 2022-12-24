@@ -1,16 +1,16 @@
 pub fn solution_easy(input: &str) -> i32 {
     let data = parse(input);
-    let mut reg_x = 1;
+    let mut register_x = 1;
     let mut cycle = 0;
     let mut ans = 0;
     for entry in data {
         cycle += 1;
-        ans += check_cycle(cycle, reg_x);
+        ans += check_cycle(cycle, register_x);
         match entry {
             Add(x) => {
                 cycle += 1;
-                ans += check_cycle(cycle, reg_x);
-                reg_x += x;
+                ans += check_cycle(cycle, register_x);
+                register_x += x;
             }
             Noop => {}
         }
@@ -20,16 +20,16 @@ pub fn solution_easy(input: &str) -> i32 {
 
 pub fn solution_hard(input: &str) -> i32 {
     let data = parse(input);
-    let mut reg_x = 1;
+    let mut register_x = 1;
     let mut cycle = 0;
     for entry in data {
-        draw_screen(cycle, reg_x);
+        draw_screen(cycle, register_x);
         cycle += 1;
         match entry {
             Add(x) => {
-                draw_screen(cycle, reg_x);
+                draw_screen(cycle, register_x);
                 cycle += 1;
-                reg_x += x;
+                register_x += x;
             }
             Noop => {}
         }

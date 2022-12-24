@@ -6,8 +6,8 @@ pub fn solution_easy(input: &str) -> i64 {
 
 pub fn solution_hard(input: &str) -> i64 {
     let mut num_list = parse(input);
-    let dec_key = 811589153;
-    num_list.iter_mut().for_each(|p| p.1 = p.1 * dec_key);
+    let decipher_key = 811_589_153;
+    num_list.iter_mut().for_each(|p| p.1 = p.1 * decipher_key);
     for _ in 0..10 {
         mix(&mut num_list);
     }

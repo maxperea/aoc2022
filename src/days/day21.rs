@@ -75,11 +75,11 @@ fn parse_binary(input: &str) -> IResult<&str, (String, &str, String)> {
 
 fn parse_operation(input: &str) -> IResult<&str, Job> {
     match parse_binary(input) {
-        Ok((_, (l, " + ", r))) => Ok(("", Addition((l, r)))),
-        Ok((_, (l, " - ", r))) => Ok(("", Subtraction((l, r)))),
-        Ok((_, (l, " * ", r))) => Ok(("", Multiplication((l, r)))),
-        Ok((_, (l, " / ", r))) => Ok(("", Division((l, r)))),
-        res => panic!("{:?}", res),
+        Ok((input, (l, " + ", r))) => Ok((input, Addition((l, r)))),
+        Ok((input, (l, " - ", r))) => Ok((input, Subtraction((l, r)))),
+        Ok((input, (l, " * ", r))) => Ok((input, Multiplication((l, r)))),
+        Ok((input, (l, " / ", r))) => Ok((input, Division((l, r)))),
+        _ => panic!(),
     }
 }
 

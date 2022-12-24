@@ -21,8 +21,8 @@ pub fn solution_easy(input: &str) -> i64 {
     let mut total = 0;
     for line in grid {
         for row in line {
-            for mcube in row {
-                if let Some(cube) = mcube {
+            for maybe_cube in row {
+                if let Some(cube) = maybe_cube {
                     total += cube.sides_exposed;
                 }
             }
