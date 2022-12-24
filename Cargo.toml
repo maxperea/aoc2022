@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 heapless = "0.7.16"
 itertools = "0.10.5"
+natural-derive = "0.3.0"
 nom = "7.1.1"
 regex = "1.7.0"
