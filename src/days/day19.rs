@@ -60,6 +60,7 @@ impl State {
             time_spent: 0,
         }
     }
+
     fn step(&mut self) {
         self.ore += self.ore_robots;
         self.clay += self.clay_robots;
@@ -83,6 +84,7 @@ impl State {
         }
         if self.ore >= blueprint.obsidian_robot_price.0
             && self.clay >= blueprint.obsidian_robot_price.1
+            && self.obsidian_robots < blueprint.geode_robot_price.1
         {
             let mut buy_obsidian = self.clone();
             buy_obsidian.ore -= blueprint.obsidian_robot_price.0;
@@ -92,14 +94,16 @@ impl State {
             branches.push(buy_obsidian);
             return branches; // Obsidian can also be strictly prioritized.
         }
-        if self.ore >= blueprint.clay_robot_price {
+        if self.ore >= blueprint.clay_robot_price
+            && self.clay_robots < blueprint.obsidian_robot_price.1
+        {
             let mut buy_clay = self.clone();
             buy_clay.ore -= blueprint.clay_robot_price;
             buy_clay.step();
             buy_clay.clay_robots += Clay(1);
             branches.push(buy_clay);
         }
-        if self.ore >= blueprint.ore_robot_price {
+        if self.ore >= blueprint.ore_robot_price && self.ore_robots < blueprint.get_max_ore() {
             let mut buy_ore = self.clone();
             buy_ore.ore -= blueprint.ore_robot_price;
             buy_ore.step();
@@ -143,6 +147,14 @@ struct Blueprint {
     clay_robot_price: Ore,
     obsidian_robot_price: (Ore, Clay),
     geode_robot_price: (Ore, Obsidian),
+}
+
+impl Blueprint {
+    fn get_max_ore(&self) -> Ore {
+        self.ore_robot_price
+            .max(self.clay_robot_price)
+            .max(self.obsidian_robot_price.0)
+    }
 }
 
 fn parse(input: &str) -> Vec<Blueprint> {
