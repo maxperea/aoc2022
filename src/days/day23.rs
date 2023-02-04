@@ -24,27 +24,27 @@ pub fn solution_hard(input: &str) -> i64 {
 }
 
 fn do_round(elfs: &Elfs, start_dir: &Direction) -> Option<Elfs> {
-    let mut does_nothing = HashSet::new();
-    let mut new_positions = HashMap::new();
+    let mut next = HashSet::new();
+    let mut maybe_new = HashMap::new();
     for elf in elfs.iter() {
-        if let Some(new_pos) = elf.get_next_valid_pos(start_dir, elfs) {
-            if new_positions.contains_key(&new_pos) {
-                does_nothing.insert(elf.clone());
-                does_nothing.insert(new_positions.remove_entry(&new_pos).unwrap().1);
+        if let Some(new_pos) = elf.next_valid_pos(start_dir, elfs) {
+            if maybe_new.contains_key(&new_pos) {
+                next.insert(elf.clone());
+                next.insert(maybe_new.remove_entry(&new_pos).unwrap().1);
             } else {
-                new_positions.insert(new_pos, *elf);
+                maybe_new.insert(new_pos, *elf);
             }
         } else {
-            does_nothing.insert(elf.clone());
+            next.insert(elf.clone());
         }
     }
-    if new_positions.is_empty() {
+    if maybe_new.is_empty() {
         return None;
     }
-    for elf in new_positions.keys() {
-        does_nothing.insert(elf.clone());
+    for elf in maybe_new.keys() {
+        next.insert(elf.clone());
     }
-    Some(does_nothing)
+    Some(next)
 }
 
 fn get_bounding_box(elfs: &Elfs) -> (i64, i64, i64, i64) {
@@ -110,7 +110,7 @@ impl Elf {
         }
     }
 
-    fn get_next_valid_pos(&self, start_dir: &Direction, elfs: &Elfs) -> Option<Elf> {
+    fn next_valid_pos(&self, start_dir: &Direction, elfs: &Elfs) -> Option<Elf> {
         if [North, South, West, East].iter().fold(true, |acc, next| {
             acc && valid_direction(elfs, self.positions(*next))
         }) {

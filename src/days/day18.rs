@@ -4,18 +4,17 @@ pub fn solution_easy(input: &str) -> i64 {
     let data = parse(input);
     let mut grid = [[[None; 32]; 32]; 32];
     for coord in data.chunks(3) {
-        match coord {
-            &[x, y, z] => {
-                assert!(grid[x][y][z] == None);
-                grid[x][y][z] = Some(Cube::new());
-                for (dx, dy, dz) in neighbourhood(&(x, y, z)) {
-                    if let Some(_cube) = grid[dx][dy][dz] {
-                        grid[dx][dy][dz].as_mut().unwrap().add_neighbour();
-                        grid[x][y][z].as_mut().unwrap().add_neighbour();
-                    }
+        if let &[x, y, z] = coord {
+            assert!(grid[x][y][z] == None);
+            grid[x][y][z] = Some(Cube::new());
+            for (dx, dy, dz) in neighbourhood(&(x, y, z)) {
+                if let Some(_cube) = grid[dx][dy][dz] {
+                    grid[dx][dy][dz].as_mut().unwrap().add_neighbour();
+                    grid[x][y][z].as_mut().unwrap().add_neighbour();
                 }
             }
-            _ => panic!("Bad input"),
+        } else {
+            panic!("Bad input")
         }
     }
     let mut total = 0;
